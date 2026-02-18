@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BookOnlineButton from "./book-online-button/book-online-button";
 
 export default function Navbar() {
   return (
@@ -26,12 +27,7 @@ export default function Navbar() {
         </div>
 
         {/* Book Online Button */}
-        <Link
-          href="/book"
-          className="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition"
-        >
-          Book Online
-        </Link>
+        <BookOnlineButton />
 
       </div>
     </nav>
