@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import BookOnlineButton from "./book-online-button/book-online-button";
+import AuthButton from "./auth-button";
 
 export default function Navbar() {
   return (
@@ -27,7 +28,12 @@ export default function Navbar() {
         </div>
 
         {/* Book Online Button */}
-        <BookOnlineButton />
+        <div>
+          <BookOnlineButton />
+          <AuthButton />
+        </div>
+        
+
 
       </div>
     </nav>
