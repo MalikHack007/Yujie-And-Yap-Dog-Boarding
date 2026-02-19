@@ -9,12 +9,12 @@ import { supabase } from "@/lib/supabaseClient";
 export default function Navbar() {
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
+  async function fetchUser() {
+    const { data } = await supabase.auth.getUser();
+    setUser(data.user);
+  }
 
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    }
+  useEffect(() => {
 
     fetchUser();
 

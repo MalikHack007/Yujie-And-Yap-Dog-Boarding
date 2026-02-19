@@ -28,7 +28,6 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
     }
 
     const userId = userData.user.id;
-    console.log(userId);
 
     // Insert dog into Supabase
     const { error } = await supabase.from("dogs").insert([

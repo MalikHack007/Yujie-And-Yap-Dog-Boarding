@@ -38,12 +38,13 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDogs();
 
-    // Optional: listen to auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) setDogs([]); // logged out → clear dogs
+      if (!session?.user) setDogs([]);
       else fetchDogs();
     });
+
     return () => listener.subscription.unsubscribe();
+
   }, []);
 
   return (
@@ -77,13 +78,13 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {editDog && (
+      {editDog ? (
         <EditDogModal
           dog={editDog}
           onClose={() => setEditDog(null)}
           onDogUpdated={fetchDogs}
         />
-      )}
+      ):""}
     </div>
   );
 }
