@@ -10,11 +10,24 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+
     async function fetchUser() {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
     }
+
     fetchUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };  
+
   }, []);
   
   return (
@@ -37,14 +50,14 @@ export default function Navbar() {
           <Link href="/team" className="hover:text-gray-600 transition">
             Meet The Team
           </Link>
-          {user && (
+          {user ? (
             <Link
               href="/dashboard"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Dashboard
             </Link>
-          )}
+          ) : ""}
         </div>
 
         {/* Book Online Button */}
