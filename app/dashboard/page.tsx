@@ -25,6 +25,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [editDog, setEditDog] = useState<Dog | null>(null);
 
+  //Function for deleting dogs from database and then fetch the new list of dogs.
+
+
   async function fetchDogs() {
     setLoading(true);
     const { data, error } = await supabase
@@ -88,12 +91,18 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                onClick={() => setEditDog(dog)}
-              >
-                Edit
-              </button>
+              <div className="flex gap-2">
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  onClick={() => setEditDog(dog)}
+                >
+                  Edit
+                </button>
+              </div>
+                  
+
+              //Delete button
+
             </div>
           ))}
         </div>
