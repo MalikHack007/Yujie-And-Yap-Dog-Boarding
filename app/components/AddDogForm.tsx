@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 interface AddDogFormProps {
@@ -13,15 +14,18 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
   const [sex, setSex] = useState("");
   const [weight, setWeight] = useState("");
   const [age, setAge] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
   const [feedingSchedule, setFeedingSchedule] = useState("");
   const [exerciseSchedule, setExerciseSchedule] = useState("");
   const [behaviorNotes, setBehaviorNotes] = useState("");
   const [medicationNeeds, setMedicationNeeds] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function handleAddDog() {
     // Get current user
     const { data: userData, error: userError } = await supabase.auth.getUser();
+
     if (userError || !userData.user) {
       alert("You must be logged in to add a dog.");
       return;
@@ -30,26 +34,57 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
     const userId = userData.user.id;
 
     // Insert dog into Supabase
-    const { error } = await supabase.from("dogs").insert([
-      {
-        user_id: userId,
-        name,
-        breed,
-        sex,
-        weight: Number(weight),
-        age: Number(age),
-        photo_url: photoUrl,
-        feeding_schedule: feedingSchedule,
-        exercise_schedule: exerciseSchedule,
-        behavior_notes: behaviorNotes,
-        medication_needs: medicationNeeds,
-      },
-    ]);
+    const { data, error } = await supabase
+      .from("dogs")
+      .insert([
+        {
+          user_id: userId,
+          name,
+          breed,
+          sex,
+          weight: Number(weight),
+          age: Number(age),
+          feeding_schedule: feedingSchedule,
+          exercise_schedule: exerciseSchedule,
+          behavior_notes: behaviorNotes,
+          medication_needs: medicationNeeds,
+        },
+      ])
+      .select()
+      .single();
 
     if (error) {
       alert("Error adding dog: " + error.message);
     } else {
       alert("Dog added successfully!");
+      const newDog = data;
+      if (imageFile){
+        const fileExt = imageFile.name.split('.').pop();
+        const filePath = `${userId}/${newDog.id}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("dog-photos")
+          .upload(filePath, imageFile);
+        
+        if (uploadError) {
+          alert("Error uploading image: " + uploadError.message);
+        }
+
+        const {data:publicUrlData} = supabase.storage
+          .from("dog-photos")
+          .getPublicUrl(filePath);
+        
+        const { error: updateError } = await supabase
+          .from("dogs")
+          .update({ photo_url: publicUrlData.publicUrl })
+          .eq("id", newDog.id);
+        
+        if (updateError) {
+          alert("Error saving image URL: " + updateError.message);
+        }
+
+      }
+
       if (onDogAdded) onDogAdded(); // refresh dashboard list
 
       // Clear form
@@ -58,11 +93,14 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
       setSex("");
       setWeight("");
       setAge("");
-      setPhotoUrl("");
       setFeedingSchedule("");
       setExerciseSchedule("");
       setBehaviorNotes("");
       setMedicationNeeds("");
+      setImageFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   }
 
@@ -111,11 +149,13 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
       />
 
       <input
-        type="text"
-        placeholder="Photo URL"
-        value={photoUrl}
-        onChange={(e) => setPhotoUrl(e.target.value)}
-        className="border p-2 rounded"
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (!e.target.files) return;
+          setImageFile(e.target.files[0]);
+        }}
       />
 
       <input

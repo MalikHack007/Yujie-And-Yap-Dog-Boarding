@@ -30,8 +30,13 @@ export default function DashboardPage() {
       .from("dogs")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) console.error(error);
-    else setDogs(data || []);
+
+    if (error){
+      alert("Error fetching dogs: " + error.message);
+      setDogs([]);
+    }
+    else{ setDogs(data || []); }
+
     setLoading(false);
   }
 
@@ -61,12 +66,27 @@ export default function DashboardPage() {
         <div className="grid gap-4 mt-6">
           {dogs.map((dog) => (
             <div key={dog.id} className="border p-4 rounded-lg flex justify-between items-center">
-              <div>
-                <p className="font-bold">{dog.name}</p>
-                <p>Breed: {dog.breed}</p>
-                <p>Age: {dog.age}</p>
-                <p>Weight: {dog.weight} lbs</p>
+              <div className="flex items-center gap-4">
+                {/* 🐶 Profile Image */}
+                {dog.photo_url ? (
+                  <img
+                    src={dog.photo_url}
+                    alt={dog.name}
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                    No Image
+                  </div>
+                )}
+                <div>
+                  <p className="font-bold">{dog.name}</p>
+                  <p>Breed: {dog.breed}</p>
+                  <p>Age: {dog.age}</p>
+                  <p>Weight: {dog.weight} lbs</p>
+                </div>
               </div>
+
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                 onClick={() => setEditDog(dog)}
