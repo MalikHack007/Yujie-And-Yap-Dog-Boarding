@@ -17,6 +17,7 @@ interface Dog {
   exercise_schedule: string;
   behavior_notes: string;
   medication_needs: string;
+  updated_at: string;
 }
 
 export default function DashboardPage() {
@@ -70,7 +71,7 @@ export default function DashboardPage() {
                 {/* 🐶 Profile Image */}
                 {dog.photo_url ? (
                   <img
-                    src={dog.photo_url}
+                    src={`${dog.photo_url}?v=${encodeURIComponent(dog.updated_at)}`}
                     alt={dog.name}
                     className="w-20 h-20 rounded-full object-cover"
                   />
