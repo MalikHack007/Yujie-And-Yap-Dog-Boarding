@@ -85,7 +85,7 @@ export default function BookingsList() {
       `
       )
       .order("start_at", { ascending: false })
-      .returns<BookingRow[]>();
+      .overrideTypes<BookingRow[]>();
 
     if (error) {
       setBookings([]);

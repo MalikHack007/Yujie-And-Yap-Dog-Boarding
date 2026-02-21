@@ -73,6 +73,7 @@ function computeDaycareUnits(startAt: Date, endAt: Date) {
 }
 
 function roundMoney(n: number) {
+  //saves the two decimal places to the right
   return Math.round(n * 100) / 100;
 }
 
@@ -90,6 +91,7 @@ export default function BookingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string>("");
 
+  //load users dogs on mount
   useEffect(() => {
     // Load user's dogs and set state
     async function loadDogs() {
@@ -123,12 +125,14 @@ export default function BookingForm() {
     loadDogs();
   }, []);
 
+  //update the selected dogs state when a checkbox is toggled on and off
   function toggleDog(dogId: string) {
     setSelectedDogIds((prev) =>
       prev.includes(dogId) ? prev.filter((id) => id !== dogId) : [...prev, dogId]
     );
   }
 
+  //calculate the pricing whenever relevant states change, and memoize it to avoid unnecessary recalculations on every render. 
   const pricing = useMemo(() => {
     const rate = DEFAULT_RATES[serviceType];
 
@@ -138,7 +142,8 @@ export default function BookingForm() {
     let units = 0;
     let unitLabel = "";
 
-    const canCompute = !!start && !!end && end > start;
+    
+    const canCompute = !!start && !!end && end > start; //purpose of !! is to convert from Date | null to boolean for the check. We want both start and end to be valid dates, and end must be after start.
 
     if (!canCompute) {
       return {
@@ -153,7 +158,7 @@ export default function BookingForm() {
     }
 
     if (serviceType === "boarding") {
-      units = computeBoardingUnits(start!, end!);
+      units = computeBoardingUnits(start!, end!);//! is used to assert that start and end are not null, since we checked canCompute above. This allows us to call the computeBoardingUnits function without TypeScript complaining about possible null values.
       unitLabel = "nights";
     } else if (serviceType === "daycare") {
       units = computeDaycareUnits(start!, end!);
@@ -179,9 +184,9 @@ export default function BookingForm() {
       dogsCount,
       total,
     };
-  }, [serviceType, startAt, endAt, selectedDogIds.length]);
+  }, [serviceType, startAt, endAt, selectedDogIds]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setMessage("");
 
@@ -189,6 +194,7 @@ export default function BookingForm() {
       setMessage("Please select at least one dog.");
       return;
     }
+
     if (!startAt || !endAt) {
       setMessage("Please select both drop-off and pick-up date/time.");
       return;
@@ -196,12 +202,14 @@ export default function BookingForm() {
 
     const start = new Date(startAt);
     const end = new Date(endAt);
+
     if (!(end > start)) {
       setMessage("Pick-up must be after drop-off.");
       return;
     }
 
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
+
     if (userErr || !userRes?.user) {
       setMessage("You must be logged in to submit a booking.");
       return;
@@ -239,7 +247,7 @@ export default function BookingForm() {
       }
 
       setMessage("Booking submitted! Status: pending.");
-      // reset (optional)
+      //reset
       setSelectedDogIds([]);
       setServiceType("boarding");
       setStartAt("");
