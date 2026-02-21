@@ -12,7 +12,7 @@ type BookingRow = {
   dogs?: {
     id: string;
     name: string;
-  } | null;
+  }[] | null;
 };
 
 function formatDateTime(iso: string) {
@@ -139,7 +139,7 @@ export default function BookingsList() {
                 <div>
                   <div className="font-semibold text-lg">{prettyServiceType(b.service_type)}</div>
                   <div className="text-sm text-gray-600">
-                    Dog: <span className="font-medium text-gray-800">{b.dogs?.name ?? "Unknown"}</span>
+                    Dog: <span className="font-medium text-gray-800">{b.dogs?.[0]?.name ?? "Unknown"}</span>
                   </div>
                 </div>
 
