@@ -3,16 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+type DogRef = { id: string; name: string };
+
 type BookingRow = {
   id: string;
   service_type: string;
   start_at: string;
   end_at: string;
   status: string;
-  dogs?: {
-    id: string;
-    name: string;
-  } | null;
+  dogs: DogRef | null;
 };
 
 function formatDateTime(iso: string) {
@@ -78,13 +77,14 @@ export default function BookingsList() {
         start_at,
         end_at,
         status,
-        dogs:dog_id (
+        dogs:dog_id(
           id,
           name
         )
       `
       )
-      .order("start_at", { ascending: false });
+      .order("start_at", { ascending: false })
+      .returns<BookingRow[]>();
 
     if (error) {
       setBookings([]);
