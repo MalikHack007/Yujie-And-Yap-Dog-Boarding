@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AddDogForm from "../components/AddDogForm";
 import EditDogModal from "../components/EditDogModal";
+import BookingsList from "../components/booking/BookingsList";
 
 interface Dog {
   id: string;
@@ -26,6 +27,31 @@ export default function DashboardPage() {
   const [editDog, setEditDog] = useState<Dog | null>(null);
 
   //Function for deleting dogs from database and then fetch the new list of dogs.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteDog(dogId: string) {
+    const confirmed = window.confirm("Delete this dog? This can’t be undone.");
+    if (!confirmed) return;
+  
+    try {
+      setDeletingId(dogId);
+  
+      const { error } = await supabase
+        .from("dogs")
+        .delete()
+        .eq("id", dogId);
+  
+      if (error) {
+        alert("Error deleting dog: " + error.message);
+        return;
+      }
+  
+      await fetchDogs();
+  
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
 
   async function fetchDogs() {
@@ -98,15 +124,23 @@ export default function DashboardPage() {
                 >
                   Edit
                 </button>
-              </div>
-                  
 
-              //Delete button
+                <button
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  onClick={() => deleteDog(dog.id)}
+                  disabled={deletingId === dog.id}
+                >
+                  {deletingId === dog.id ? "Deleting..." : "Delete"}
+                </button>
+
+              </div>
 
             </div>
           ))}
         </div>
       )}
+
+      <BookingsList />
 
       {editDog ? (
         <EditDogModal
