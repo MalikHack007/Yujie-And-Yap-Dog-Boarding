@@ -5,9 +5,10 @@ import BookOnlineButton from "./book-online-button/book-online-button";
 import AuthButton from "./auth-button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { User } from "@supabase/supabase-js";
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   async function fetchUser() {
     const { data } = await supabase.auth.getUser();
