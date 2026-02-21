@@ -24,11 +24,12 @@ const DEFAULT_RATES: Record<ServiceType, number> = {
   walk: 55,
 };
 
-// Helpers
+//strip a date down to local midnight (start of day) for accurate day boundary calculations
 function startOfLocalDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
 }
 
+//calculate how many nigths between two dates.
 function diffDaysLocal(a: Date, b: Date) {
   // difference in whole local days between start-of-day values
   const ms = startOfLocalDay(b).getTime() - startOfLocalDay(a).getTime();
@@ -51,13 +52,16 @@ function computeBoardingUnits(startAt: Date, endAt: Date) {
   const endMinutes = endAt.getHours() * 60 + endAt.getMinutes();
 
   let minutesLater = endMinutes - startMinutes;
-  if (minutesLater < 0) minutesLater += 24 * 60; // wrap to next day
+  // If pickup is earlier in the day than dropoff time, it doesn't count as extra time
+  if (minutesLater < 0) minutesLater = 0; 
 
   const hoursLater = minutesLater / 60;
 
   let extra = 0;
+
   if (hoursLater >= 8) extra = 1;
   else if (hoursLater >= 2) extra = 0.5;
+  else extra = 0;
 
   return baseNights + extra;
 }
@@ -87,20 +91,18 @@ export default function BookingForm() {
   const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
-    let cancelled = false;
-
+    // Load user's dogs and set state
     async function loadDogs() {
       setDogsLoading(true);
       setMessage("");
 
       const { data: userRes } = await supabase.auth.getUser();
+
       if (!userRes?.user) {
-        if (!cancelled) {
           setDogs([]);
           setDogsLoading(false);
           setMessage("Please log in to request a booking.");
-        }
-        return;
+          return;
       }
 
       const { data, error } = await supabase
@@ -108,21 +110,17 @@ export default function BookingForm() {
         .select("id,name")
         .order("created_at", { ascending: false });
 
-      if (!cancelled) {
-        if (error) {
-          setDogs([]);
-          setMessage("Error loading dogs: " + error.message);
-        } else {
-          setDogs((data ?? []) as DogOption[]);
-        }
-        setDogsLoading(false);
+      if (error) {
+        setDogs([]);
+        setMessage("Error loading dogs: " + error.message);
+      } else {
+        setDogs((data ?? []) as DogOption[]);
       }
+
+      setDogsLoading(false);
     }
 
     loadDogs();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   function toggleDog(dogId: string) {
