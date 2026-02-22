@@ -11,7 +11,6 @@ type BookingRow = {
   start_at: string;
   end_at: string;
   status: string;
-
   dogs: DogRef | null;
 };
 

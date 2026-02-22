@@ -9,15 +9,29 @@ import type { User } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  async function fetchUser() {
-    const { data } = await supabase.auth.getUser();
-    setUser(data.user);
-  }
 
   useEffect(() => {
 
-    fetchUser();
+    async function checkUserAndAdmin() {
+      const { data: userRes } = await supabase.auth.getUser();
+      const user = userRes?.user;
+
+      if (!user) {
+        setUser(null);
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("is_admin");
+
+      setIsAdmin(Boolean(data) && !error);
+
+      setUser(user);
+    }
+
+    checkUserAndAdmin();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -56,9 +70,19 @@ export default function Navbar() {
               href="/dashboard"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
             >
-              Dashboard
+              Client Dashboard
             </Link>
           ) : ""}
+
+          {/* Only show if admin */}
+          {isAdmin && (
+            <Link
+              href="/admin/bookings"
+              className="text-sm font-medium px-3 py-1.5 rounded border hover:bg-gray-50"
+            >
+              View Admin Dashboard
+            </Link>
+          )}
         </div>
 
         {/* Book Online Button */}
