@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-
-type ServiceType = "boarding" | "daycare" | "drop_in" | "walk";
+import type { ServiceType } from "@/types/booking";
 
 type DogOption = {
   id: string;

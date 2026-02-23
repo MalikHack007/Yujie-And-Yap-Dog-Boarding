@@ -2,15 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { BookingStatus } from "@/types/booking";
+import type { ServiceType } from "@/types/booking";
 
 type DogRef = { id: string; name: string };
 
 type BookingRow = {
   id: string;
-  service_type: string;
+  service_type: ServiceType;
   start_at: string;
   end_at: string;
-  status: string;
+  status: BookingStatus;
   dogs: DogRef | null;
 };
 
@@ -31,18 +33,19 @@ function prettyServiceType(s: string) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function statusBadgeClasses(status: string) {
-  // Simple styling without hardcoding colors too much
+function statusBadgeClasses(status: BookingStatus) {
   switch (status) {
     case "confirmed":
       return "bg-green-100 text-green-800";
+    case "current":
+      return "bg-blue-100 text-blue-800";
     case "cancelled":
+      return "bg-gray-100 text-gray-800";
     case "declined":
       return "bg-red-100 text-red-800";
     case "completed":
       return "bg-gray-200 text-gray-800";
-    case "in_progress":
-      return "bg-blue-100 text-blue-800";
+
     default:
       return "bg-yellow-100 text-yellow-800"; // pending
   }

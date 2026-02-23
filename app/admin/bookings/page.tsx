@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-
-type BookingStatus = "pending" | "confirmed" | "cancelled" | "declined" | "completed";
+import type { BookingStatus } from "@/types/booking";
+import type { ServiceType } from "@/types/booking";
 
 type DogRef = { id: string; name: string };
 
 type BookingRow = {
   id: string;
-  service_type: string;
+  service_type: ServiceType;
   start_at: string;
   end_at: string;
   status: BookingStatus;
