@@ -62,6 +62,7 @@ export default function BookingsList() {
 
     // RLS should handle ownership filtering, but we also ensure logged-in user exists
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    
     if (userErr || !userRes?.user) {
       setBookings([]);
       setLoading(false);
