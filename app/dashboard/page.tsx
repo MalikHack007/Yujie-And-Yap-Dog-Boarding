@@ -56,17 +56,22 @@ export default function DashboardPage() {
 
   async function fetchDogs() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("dogs")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error){
-      alert("Error fetching dogs: " + error.message);
+  
+    try {
+      const res = await fetch("/api/dogs");
+  
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+  
+      const data = await res.json();
+      setDogs(data);
+    } catch (err: any) {
+      alert("Error fetching dogs: " + err.message);
       setDogs([]);
     }
-    else{ setDogs(data || []); }
-
+  
     setLoading(false);
   }
 
