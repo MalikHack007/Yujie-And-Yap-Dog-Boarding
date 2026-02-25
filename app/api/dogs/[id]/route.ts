@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function DELETE (req: NextRequest, {params} : {params:{id:string}}){
+export async function DELETE (req: NextRequest, {params} : {params: Promise<{id:String}>}){
     const { id } = await params;
 
     console.log("Deleting dog with id:", id);
