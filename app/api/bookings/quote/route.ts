@@ -25,18 +25,18 @@ export async function POST(req: Request) {
   // rate lookup: user override first
   const { data: userRate } = await supabase
     .from("service_rates_user")
-    .select("rate,currency")
+    .select("rate_cents,currency")
     .eq("user_id", userRes.user.id)
     .eq("service_type", service_type)
     .single();
 
   const { data: defaultRate } = await supabase
     .from("service_rates_default")
-    .select("rate,currency")
+    .select("rate_cents,currency")
     .eq("service_type", service_type)
-    .maybeSingle();
+    .single();
 
-  const rate = Number(userRate?.rate ?? defaultRate?.rate ?? 0);
+  const rate = Number(userRate?.rate_cents ?? defaultRate?.rate_cents ?? 0);
   const currency = String(userRate?.currency ?? defaultRate?.currency ?? "USD");
 
   if (!rate || rate < 0) {

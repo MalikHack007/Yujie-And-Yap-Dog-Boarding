@@ -146,6 +146,8 @@ export default function BookingForm() {
       }
     }
 
+    fetchQuote();
+
   }, [serviceType, startAt, endAt, selectedDogIds.length]);
 
   async function handleSubmit(e: React.SubmitEvent) {
