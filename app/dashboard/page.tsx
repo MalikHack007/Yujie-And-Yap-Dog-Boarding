@@ -6,7 +6,7 @@ import AddDogForm from "../components/AddDogForm";
 import EditDogModal from "../components/EditDogModal";
 import BookingsList from "../components/booking/BookingsList";
 
-interface Dog {
+type Dog = {
   id: string;
   name: string;
   breed: string;
