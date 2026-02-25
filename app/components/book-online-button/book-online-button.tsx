@@ -1,20 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
 
 export default function BookOnlineButton() {
   const router = useRouter();
 
   async function handleClick() {
-    const { data } = await supabase.auth.getUser();
-
-    if (!data.user) {
-      // Not logged in → go to signup
-      router.push("/signup");
-    } else {
-      // Logged in → go to booking page
+    try {
+      const res = await fetch("/api/session", {
+        method: "GET",
+        cache: "no-store", // ensure fresh auth check
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok || !data.user) {
+        router.push("/login");
+        return;
+      }
+  
       router.push("/book");
+    } catch {
+      router.push("/login");
     }
   }
 
