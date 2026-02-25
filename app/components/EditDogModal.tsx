@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 
-interface Dog {
+type Dog = {
   id: string;
   name: string;
   breed: string;
@@ -18,7 +18,7 @@ interface Dog {
   updated_at: string;
 }
 
-interface EditDogModalProps {
+type EditDogModalProps = {
   dog: Dog;
   onClose: () => void;
   onDogUpdated?: () => void;
@@ -35,6 +35,8 @@ export default function EditDogModal({ dog, onClose, onDogUpdated }: EditDogModa
   const [exerciseSchedule, setExerciseSchedule] = useState(dog.exercise_schedule);
   const [behaviorNotes, setBehaviorNotes] = useState(dog.behavior_notes);
   const [medicationNeeds, setMedicationNeeds] = useState(dog.medication_needs);
+
+  const supabase = useMemo(() => createClient(), []);
 
 
   // New image state (for replace)
@@ -53,76 +55,47 @@ export default function EditDogModal({ dog, onClose, onDogUpdated }: EditDogModa
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  async function uploadReplacementPhotoIfNeeded(): Promise<string | null> {
-    if (!imageFile) return null;
-
-    // Get signed-in user (needed for folder path userId/dogId.ext)
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError) throw userError;
-    if (!user) throw new Error("You must be logged in to upload a photo.");
-
-    const fileExt =
-      imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
-
-    const filePath = `${user.id}/${dog.id}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("dog-photos")
-      .upload(filePath, imageFile, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    // Bucket is public → public URL works
-    const { data: pub } = supabase.storage
-      .from("dog-photos")
-      .getPublicUrl(filePath);
-
-    if (!pub?.publicUrl) {
-      throw new Error("Could not generate public URL for uploaded image.");
-    }
-
-    return pub.publicUrl;
-  }
-
   async function handleUpdate() {
     setSaving(true);
-    const now = new Date().toISOString();
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("breed", breed);
+      formData.append("sex", sex);
+      formData.append("weight", weight);
+      formData.append("age", age);
+      formData.append("feeding_schedule", feedingSchedule);
+      formData.append("exercise_schedule", exerciseSchedule);
+      formData.append("behavior_notes", behaviorNotes);
+      formData.append("medication_needs", medicationNeeds);
+      // include existing photoUrl so server can keep it if no new file
+      formData.append("photo_url", photoUrl ?? "");
+      if (imageFile) formData.append("photo", imageFile);
 
-    try{
-      // 1) Upload new image (if selected) and get new URL
-      const newPhotoUrl = await uploadReplacementPhotoIfNeeded();
+      const res = await fetch(`/api/dogs/${dog.id}`, {
+        method: "PATCH",
+        body: formData,
+      });
 
-      const { error } = await supabase
-        .from("dogs")
-        .update({
-          name, breed, sex,
-          weight: Number(weight),
-          age: Number(age),
-          photo_url: newPhotoUrl ?? photoUrl,
-          feeding_schedule: feedingSchedule,
-          exercise_schedule: exerciseSchedule,
-          behavior_notes: behaviorNotes,
-          medication_needs: medicationNeeds,
-          updated_at: now,
-        })
-        .eq("id", dog.id);
+      const payload = await res.json();
 
-      if (error){alert(error.message)}
-      // 3) Update local state so UI is consistent if modal remains open briefly
-      if (newPhotoUrl) {
-        setPhotoUrl(newPhotoUrl);
-        clearSelectedImage();
+      if (!res.ok) {
+        alert(payload?.error ?? "Failed to update dog.");
+        return;
       }
+
+      // If server returned updated dog, sync local UI (optional)
+      const updatedDog: Dog | undefined = payload?.dog;
+      if (updatedDog?.photo_url) setPhotoUrl(updatedDog.photo_url);
+
+      clearSelectedImage();
+
       if (onDogUpdated) onDogUpdated();
       onClose();
-    } catch (err: any){
+    } catch (err: any) {
       console.error(err);
       alert(err?.message ?? "Failed to update dog.");
-    } finally{
+    } finally {
       setSaving(false);
     }
 
