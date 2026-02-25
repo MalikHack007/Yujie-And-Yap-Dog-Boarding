@@ -73,6 +73,7 @@ export default function BookingForm() {
         }));
 
         setDogs(options);
+        setDogsLoading(false);
 
       } catch (e: any) {
         setDogs([]);
