@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import type { ServiceType } from "@/types/booking";
 
 type DogOption = {
@@ -10,71 +9,22 @@ type DogOption = {
 };
 
 const SERVICE_LABELS: Record<ServiceType, string> = {
-  boarding: "Boarding ($50 / night)",
-  daycare: "Daycare ($55 / day)",
-  drop_in: "Drop-in ($30 / drop-in)",
-  walk: "Dog Walk ($55 / walk)",
+  boarding: "Boarding",
+  daycare: "Daycare",
+  drop_in: "Drop-in",
+  walk: "Dog Walk",
 };
 
-const DEFAULT_RATES: Record<ServiceType, number> = {
-  boarding: 50,
-  daycare: 55,
-  drop_in: 30,
-  walk: 55,
+type Quote = {
+  canCompute: boolean;
+  currency: string;
+  rate: number;
+  units: number;
+  unitLabel: string;
+  perDogTotal: number;
+  dogsCount: number;
+  total: number;
 };
-
-//strip a date down to local midnight (start of day) for accurate day boundary calculations
-function startOfLocalDay(d: Date) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-}
-
-//calculate how many nigths between two dates.
-function diffDaysLocal(a: Date, b: Date) {
-  // difference in whole local days between start-of-day values
-  const ms = startOfLocalDay(b).getTime() - startOfLocalDay(a).getTime();
-  return Math.round(ms / 86400000);
-}
-
-/**
- * Boarding units:
- * - base nights = number of day boundaries crossed: date(end) - date(start)
- * - extra:
- *    - if pickup is 2–8 hours later than dropoff time-of-day => +0.5
- *    - if pickup is 8+ hours later than dropoff time-of-day => +1.0
- */
-function computeBoardingUnits(startAt: Date, endAt: Date) {
-  if (!(endAt > startAt)) return 0;
-
-  const baseNights = Math.max(0, diffDaysLocal(startAt, endAt));
-
-  const startMinutes = startAt.getHours() * 60 + startAt.getMinutes();
-  const endMinutes = endAt.getHours() * 60 + endAt.getMinutes();
-
-  let minutesLater = endMinutes - startMinutes;
-  // If pickup is earlier in the day than dropoff time, it doesn't count as extra time
-  if (minutesLater < 0) minutesLater = 0; 
-
-  const hoursLater = minutesLater / 60;
-
-  let extra = 0;
-
-  if (hoursLater >= 8) extra = 1;
-  else if (hoursLater >= 2) extra = 0.5;
-  else extra = 0;
-
-  return baseNights + extra;
-}
-
-function computeDaycareUnits(startAt: Date, endAt: Date) {
-  // Count calendar days inclusive (min 1)
-  const days = diffDaysLocal(startAt, endAt) + 1;
-  return Math.max(1, days);
-}
-
-function roundMoney(n: number) {
-  //saves the two decimal places to the right
-  return Math.round(n * 100) / 100;
-}
 
 export default function BookingForm() {
   const [dogs, setDogs] = useState<DogOption[]>([]);
@@ -83,107 +33,119 @@ export default function BookingForm() {
   const [serviceType, setServiceType] = useState<ServiceType>("boarding");
   const [selectedDogIds, setSelectedDogIds] = useState<string[]>([]);
 
-  // Use datetime-local for cleaner UX (date + time together)
   const [startAt, setStartAt] = useState<string>(""); // "YYYY-MM-DDTHH:mm"
   const [endAt, setEndAt] = useState<string>("");
 
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string>("");
 
-  //load users dogs on mount
+  const [quote, setQuote] = useState<Quote>({
+    canCompute: false,
+    currency: "USD",
+    rate: 0,
+    units: 0,
+    unitLabel: "unit",
+    perDogTotal: 0,
+    dogsCount: 0,
+    total: 0,
+  });
+
+  // Load user's dogs on mount (via API)
   useEffect(() => {
-    // Load user's dogs and set state
+
     async function loadDogs() {
       setDogsLoading(true);
       setMessage("");
 
-      const { data: userRes } = await supabase.auth.getUser();
+      try {
+        const res = await fetch("/api/dogs", { method: "GET" });
+        const data = await res.json();
 
-      if (!userRes?.user) {
+        if (!res.ok) {
           setDogs([]);
-          setDogsLoading(false);
-          setMessage("Please log in to request a booking.");
+          setMessage(data?.error ?? "Please log in to request a booking.");
           return;
-      }
+        }
 
-      const { data, error } = await supabase
-        .from("dogs")
-        .select("id,name")
-        .order("created_at", { ascending: false });
+        const options: DogOption[] = (data ?? []).map((dog: any) => ({
+          id: dog.id,
+          name: dog.name,
+        }));
 
-      if (error) {
+        setDogs(options);
+
+      } catch (e: any) {
         setDogs([]);
-        setMessage("Error loading dogs: " + error.message);
-      } else {
-        setDogs((data ?? []) as DogOption[]);
+        setMessage(e?.message ?? "Error loading dogs.");
       }
-
-      setDogsLoading(false);
     }
 
     loadDogs();
   }, []);
 
-  //update the selected dogs state when a checkbox is toggled on and off
+  //set toggled dog state whenever a dog is toggled on and off
   function toggleDog(dogId: string) {
     setSelectedDogIds((prev) =>
       prev.includes(dogId) ? prev.filter((id) => id !== dogId) : [...prev, dogId]
     );
   }
 
-  //calculate the pricing whenever relevant states change, and memoize it to avoid unnecessary recalculations on every render. 
-  const pricing = useMemo(() => {
-    const rate = DEFAULT_RATES[serviceType];
+  // Fetch quote whenever inputs change (backend computes rate + units + totals)
+  useEffect(() => {
 
-    const start = startAt ? new Date(startAt) : null;
-    const end = endAt ? new Date(endAt) : null;
+    async function fetchQuote() {
+      // Reset quote if can't compute yet
+      const start = startAt ? new Date(startAt) : null;
+      const end = endAt ? new Date(endAt) : null;
+      const canCompute = !!start && !!end && end > start;
 
-    let units = 0;
-    let unitLabel = "";
+      if (!canCompute) {
+        setQuote((q) => ({
+          ...q,
+          canCompute: false,
+          dogsCount: selectedDogIds.length,
+          units: 0,
+          perDogTotal: 0,
+          total: 0,
+          unitLabel:
+            serviceType === "boarding"
+              ? "nights"
+              : serviceType === "daycare"
+              ? "days"
+              : serviceType === "drop_in"
+              ? "drop-in"
+              : "walk",
+        }));
+        return;
+      }
 
-    
-    const canCompute = !!start && !!end && end > start; //purpose of !! is to convert from Date | null to boolean for the check. We want both start and end to be valid dates, and end must be after start.
+      try {
+        const res = await fetch("/api/bookings/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            service_type: serviceType,
+            start_at: start!.toISOString(),
+            end_at: end!.toISOString(),
+            dogs_count: selectedDogIds.length,
+          }),
+        });
 
-    if (!canCompute) {
-      return {
-        canCompute: false,
-        rate,
-        units: 0,
-        unitLabel: serviceType === "boarding" ? "nights" : serviceType === "daycare" ? "days" : "unit",
-        perDogTotal: 0,
-        dogsCount: selectedDogIds.length,
-        total: 0,
-      };
+        const data = await res.json();
+
+        if (!res.ok) {
+          // Keep UI usable; just show error in message
+          setMessage(data?.error ?? "Could not compute quote.");
+          return;
+        }
+
+        setQuote(data.quote as Quote);
+      } catch (e: any) {
+        setMessage(e?.message ?? "Could not compute quote.");
+      }
     }
 
-    if (serviceType === "boarding") {
-      units = computeBoardingUnits(start!, end!);//! is used to assert that start and end are not null, since we checked canCompute above. This allows us to call the computeBoardingUnits function without TypeScript complaining about possible null values.
-      unitLabel = "nights";
-    } else if (serviceType === "daycare") {
-      units = computeDaycareUnits(start!, end!);
-      unitLabel = "days";
-    } else if (serviceType === "drop_in") {
-      units = 1;
-      unitLabel = "drop-in";
-    } else {
-      units = 1;
-      unitLabel = "walk";
-    }
-
-    const perDogTotal = roundMoney(units * rate);
-    const dogsCount = selectedDogIds.length;
-    const total = roundMoney(perDogTotal * dogsCount);
-
-    return {
-      canCompute: true,
-      rate,
-      units,
-      unitLabel,
-      perDogTotal,
-      dogsCount,
-      total,
-    };
-  }, [serviceType, startAt, endAt, selectedDogIds]);
+  }, [serviceType, startAt, endAt, selectedDogIds.length]);
 
   async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
@@ -207,46 +169,30 @@ export default function BookingForm() {
       return;
     }
 
-    const { data: userRes, error: userErr } = await supabase.auth.getUser();
-
-    if (userErr || !userRes?.user) {
-      setMessage("You must be logged in to submit a booking.");
-      return;
-    }
-
-    // Compute per-dog units & totals (each dog gets its own booking row)
-    const rate = DEFAULT_RATES[serviceType];
-
-    let units = 0;
-    if (serviceType === "boarding") units = computeBoardingUnits(start, end);
-    else if (serviceType === "daycare") units = computeDaycareUnits(start, end);
-    else units = 1;
-
-    const perDogTotal = roundMoney(units * rate);
-
-    const rows = selectedDogIds.map((dogId) => ({
-      dog_id: dogId,
-      owner_id: userRes.user.id,
-      service_type: serviceType, // must match your table column name
-      start_at: start.toISOString(),
-      end_at: end.toISOString(),
-      rate,
-      units,
-      total_cost: perDogTotal,
-      currency: "USD",
-      status: "pending",
-    }));
-
     setSubmitting(true);
+
     try {
-      const { error } = await supabase.from("Bookings").insert(rows);
-      if (error) {
-        setMessage("Error submitting booking: " + error.message);
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_type: serviceType,
+          start_at: start.toISOString(),
+          end_at: end.toISOString(),
+          dog_ids: selectedDogIds,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data?.error ?? "Error submitting booking.");
         return;
       }
 
       setMessage("Booking submitted! Status: pending.");
-      //reset
+
+      // reset
       setSelectedDogIds([]);
       setServiceType("boarding");
       setStartAt("");
@@ -327,7 +273,7 @@ export default function BookingForm() {
           />
         </div>
 
-        {/* Price breakdown (pre-submit) */}
+        {/* Price breakdown */}
         <div className="border rounded-lg p-4 bg-gray-50">
           <div className="font-semibold mb-2">Price Breakdown</div>
 
@@ -339,19 +285,21 @@ export default function BookingForm() {
 
             <div className="flex justify-between">
               <span>Rate</span>
-              <span className="font-medium">${pricing.rate.toFixed(2)}</span>
+              <span className="font-medium">
+                {quote.canCompute ? `${quote.currency} ${quote.rate.toFixed(2)}` : "—"}
+              </span>
             </div>
 
             <div className="flex justify-between">
               <span>Units</span>
               <span className="font-medium">
-                {pricing.canCompute ? pricing.units : "—"} {pricing.unitLabel}
+                {quote.canCompute ? quote.units : "—"} {quote.unitLabel}
               </span>
             </div>
 
             <div className="flex justify-between">
               <span>Dogs selected</span>
-              <span className="font-medium">{pricing.dogsCount}</span>
+              <span className="font-medium">{selectedDogIds.length}</span>
             </div>
 
             <hr className="my-2" />
@@ -359,18 +307,18 @@ export default function BookingForm() {
             <div className="flex justify-between">
               <span>Per-dog total</span>
               <span className="font-medium">
-                {pricing.canCompute ? `$${pricing.perDogTotal.toFixed(2)}` : "—"}
+                {quote.canCompute ? `${quote.currency} ${quote.perDogTotal.toFixed(2)}` : "—"}
               </span>
             </div>
 
             <div className="flex justify-between text-base">
               <span className="font-semibold">Estimated total</span>
               <span className="font-semibold">
-                {pricing.canCompute ? `$${pricing.total.toFixed(2)}` : "—"}
+                {quote.canCompute ? `${quote.currency} ${quote.total.toFixed(2)}` : "—"}
               </span>
             </div>
 
-            {!pricing.canCompute && (
+            {!quote.canCompute && (
               <div className="text-xs text-gray-600 mt-2">
                 Enter a valid date/time range to see totals.
               </div>
@@ -394,4 +342,5 @@ export default function BookingForm() {
       )}
     </div>
   );
+
 }
