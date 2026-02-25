@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 type Dog = {
   id: string;
@@ -35,8 +34,6 @@ export default function EditDogModal({ dog, onClose, onDogUpdated }: EditDogModa
   const [exerciseSchedule, setExerciseSchedule] = useState(dog.exercise_schedule);
   const [behaviorNotes, setBehaviorNotes] = useState(dog.behavior_notes);
   const [medicationNeeds, setMedicationNeeds] = useState(dog.medication_needs);
-
-  const supabase = useMemo(() => createClient(), []);
 
 
   // New image state (for replace)

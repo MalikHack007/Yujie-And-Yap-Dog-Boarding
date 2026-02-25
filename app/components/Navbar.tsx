@@ -3,39 +3,62 @@
 import Link from "next/link";
 import BookOnlineButton from "./book-online-button/book-online-button";
 import AuthButton from "./auth-button";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect, useMemo } from "react";
+
+type SessionResponse = {
+  user: any | null;
+  isAdmin: boolean;
+};
+
 
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    async function loadSession() {
+      const res = await fetch("/api/session");
+      const data: SessionResponse = await res.json();
 
-    async function checkUserAndAdmin() {
-      const { data: userRes } = await supabase.auth.getUser();
-      const user = userRes?.user;
+      console.log("Session data:", data);
 
-      if (!user) {
+      if (!res.ok) {
         setUser(null);
         setIsAdmin(false);
         return;
       }
 
-      const { data, error } = await supabase.rpc("is_admin");
-
-      setIsAdmin(Boolean(data) && !error);
-
-      setUser(user);
+      setUser(data.user ?? null);
+      setIsAdmin(Boolean(data.isAdmin));
     }
 
-    checkUserAndAdmin();
+    loadSession();
+
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
+      async (event, session) => {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+    
+        if (!currentUser) {
+          setIsAdmin(false);
+          return;
+        }
+    
+        try {
+          const res = await fetch("/api/session");
+          const data = await res.json();
+    
+          if (res.ok) {
+            setIsAdmin(Boolean(data.isAdmin));
+          } else {
+            setIsAdmin(false);
+          }
+        } catch {
+          setIsAdmin(false);
+        }
       }
     );
 
