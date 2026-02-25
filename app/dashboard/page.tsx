@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 import AddDogForm from "../components/AddDogForm";
 import EditDogModal from "../components/EditDogModal";
 import BookingsList from "../components/booking/BookingsList";
@@ -19,9 +19,14 @@ type Dog = {
   behavior_notes: string;
   medication_needs: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
+
+
 export default function DashboardPage() {
+  const supabase = useMemo(() => createClient(), []);
+
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDog, setEditDog] = useState<Dog | null>(null);
@@ -36,14 +41,13 @@ export default function DashboardPage() {
     try {
       setDeletingId(dogId);
   
-      const { error } = await supabase
-        .from("dogs")
-        .delete()
-        .eq("id", dogId);
-  
-      if (error) {
-        alert("Error deleting dog: " + error.message);
-        return;
+      const res = await fetch(`/api/dogs/${dogId}`, {
+        method: "DELETE",
+      });
+    
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error);
       }
   
       await fetchDogs();
@@ -99,7 +103,7 @@ export default function DashboardPage() {
         <p>You haven’t added any dogs yet.</p>
       ) : (
         <div className="grid gap-4 mt-6">
-          {dogs.map((dog) => (
+          {dogs.map((dog) => ( dog.deleted_at ? null :
             <div key={dog.id} className="border p-4 rounded-lg flex justify-between items-center">
               <div className="flex items-center gap-4">
                 {/* 🐶 Profile Image */}
