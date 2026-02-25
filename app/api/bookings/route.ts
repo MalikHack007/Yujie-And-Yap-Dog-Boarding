@@ -33,3 +33,58 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true }, { status: 201 });
 }
+
+export async function GET() {
+  const supabase = await createClient();
+
+  // 1️⃣ Auth check
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  // 2️⃣ Fetch bookings for this user
+  // Only return the columns the UI needs
+  const { data, error } = await supabase
+    .from("Bookings")
+    .select(`
+      id,
+      service_type,
+      start_at,
+      end_at,
+      status,
+      dogs:dog_id (
+        id,
+        name
+      )
+    `)
+    .eq("owner_id", user.id)
+    .order("start_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+
+  // 3️⃣ Normalize response shape (important)
+  const bookings =
+    (data ?? []).map((b) => ({
+      id: b.id,
+      service_type: b.service_type,
+      start_at: b.start_at,
+      end_at: b.end_at,
+      status: b.status,
+      dogs: b.dogs ?? null,
+    }));
+
+  return NextResponse.json({ bookings });
+}

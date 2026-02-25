@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import type { BookingStatus } from "@/types/booking";
-import type { ServiceType } from "@/types/booking";
+import type { BookingStatus, ServiceType } from "@/types/booking";
 
 type DogRef = { id: string; name: string };
 
@@ -60,55 +58,33 @@ export default function BookingsList() {
     setLoading(true);
     setErrorMsg("");
 
-    // RLS should handle ownership filtering, but we also ensure logged-in user exists
-    const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    
-    if (userErr || !userRes?.user) {
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setBookings([]);
+        setErrorMsg(data?.error ?? "Unable to load bookings.");
+        return;
+      }
+
+      // supports either: array response OR { bookings: array }
+      const rows: BookingRow[] = Array.isArray(data) ? data : data?.bookings ?? [];
+      setBookings(rows);
+    } catch (err: any) {
       setBookings([]);
+      setErrorMsg(err?.message ?? "Unable to load bookings.");
+    } finally {
       setLoading(false);
-      setErrorMsg("Please log in to view your bookings.");
-      return;
     }
-
-    // Join dogs so we can display the dog name.
-    // This requires a FK relationship bookings.dog_id -> dogs.id
-    const { data, error } = await supabase
-      .from("Bookings")
-      .select(
-        `
-        id,
-        service_type,
-        start_at,
-        end_at,
-        status,
-        dogs:dog_id(
-          id,
-          name
-        )
-      `
-      )
-      .order("start_at", { ascending: false })
-      .overrideTypes<BookingRow[]>();
-
-    if (error) {
-      setBookings([]);
-      setErrorMsg("Error loading bookings: " + error.message);
-    } else {
-      setBookings((data ?? []) as BookingRow[]);
-    }
-
-    setLoading(false);
   }
 
   useEffect(() => {
     fetchBookings();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) setBookings([]);
-      else fetchBookings();
-    });
-
-    return () => listener.subscription.unsubscribe();
   }, []);
 
   const empty = useMemo(() => !loading && bookings.length === 0, [loading, bookings.length]);
