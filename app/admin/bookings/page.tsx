@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import type { BookingStatus } from "@/types/booking";
 import type { ServiceType } from "@/types/booking";
+import { formatDateTime, prettyServiceType } from "@/lib/booking/utils";
 
 type DogRef = { id: string; name: string };
 
@@ -15,21 +15,6 @@ type BookingRow = {
   status: BookingStatus;
   dog: DogRef | null;
 };
-
-function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function prettyServiceType(s: string) {
-  return s.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 type FilterKey = "all" | "pending" | "upcoming" | "current" | "past" | "cancelled";
 
@@ -76,37 +61,35 @@ export default function AdminBookingsPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // 🔁 Fetch bookings via API
   async function fetchBookings() {
     setLoading(true);
     setErrorMsg(null);
 
-    const { data, error } = await supabase
-      .from("Bookings")
-      .select(
-        `
-        id,
-        service_type,
-        start_at,
-        end_at,
-        status,
-        dog:dog_id(id,name)
-        `
-      )
-      .order("start_at", { ascending: false })
-      .overrideTypes<BookingRow[]>();
-    
-    
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "GET",
+        cache: "no-store",
+      });
 
-    if (error) {
-      console.log("Error fetching bookings:", error);
-      setErrorMsg(error.message);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data?.error ?? "Failed to load bookings.");
+        setBookings([]);
+        return;
+      }
+
+      const rows: BookingRow[] =
+        Array.isArray(data) ? data : data?.bookings ?? [];
+
+      setBookings(rows);
+    } catch (err: any) {
+      setErrorMsg(err?.message ?? "Failed to load bookings.");
       setBookings([]);
-    } else {
-      console.log("Fetched bookings:", data);
-      setBookings((data ?? []) as BookingRow[]);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   //fetch bookings on mount
@@ -120,20 +103,36 @@ export default function AdminBookingsPage() {
     return bookings.filter((b) => classifyBooking(b) === filter);
   }, [bookings, filter]);
 
-  //update booking status
+  // 🔁 Update booking status via API
   async function setStatus(id: string, status: BookingStatus) {
     setBusyId(id);
-    const { error } = await supabase.from("Bookings").update({ status }).eq("id", id);
-    setBusyId(null);
 
-    if (error) {
-      alert(error.message);
-      return;
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data?.error ?? "Failed to update booking.");
+        return;
+      }
+
+      // Optimistic update (no refetch needed)
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === id ? { ...b, status } : b
+        )
+      );
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to update booking.");
+    } finally {
+      setBusyId(null);
     }
-    // refresh list
-    fetchBookings();
   }
-
   return (
     <div className="grid grid-cols-12 gap-6">
       {/* Left sidebar */}

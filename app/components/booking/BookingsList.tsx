@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { BookingStatus, ServiceType } from "@/types/booking";
+import { formatDateTime, prettyServiceType } from "@/lib/booking/utils";
 
 type DogRef = { id: string; name: string };
 
@@ -13,23 +14,6 @@ type BookingRow = {
   status: BookingStatus;
   dogs: DogRef | null;
 };
-
-function formatDateTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function prettyServiceType(s: string) {
-  return s
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function statusBadgeClasses(status: BookingStatus) {
   switch (status) {
