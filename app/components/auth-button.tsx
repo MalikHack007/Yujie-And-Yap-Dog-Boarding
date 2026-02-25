@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {createClient} from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AuthButton() {
   const [user, setUser] = useState<any>(null);
@@ -12,13 +12,19 @@ export default function AuthButton() {
   // Check auth state on mount
   useEffect(() => {
     async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
+      const res = await fetch("/api/me", { method: "GET" });
+      const data = await res.json();
+  
+      if (!res.ok) {
+        setUser(null);
+        return;
+      }
+  
+      setUser(data.user ?? null);
     }
 
     fetchUser();
-
-    // Optional: listen for auth changes (login/logout)
+    
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
