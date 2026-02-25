@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useRef, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface AddDogFormProps {
   onDogAdded?: () => void; // Callback after dog is added
@@ -20,73 +19,41 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
   const [medicationNeeds, setMedicationNeeds] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const supabase = useMemo(() => createClient(), []);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   async function handleAddDog() {
-    // Get current user
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !userData.user) {
-      alert("You must be logged in to add a dog.");
-      return;
-    }
-
-    const userId = userData.user.id;
-
-    // Insert dog into Supabase
-    const { data, error } = await supabase
-      .from("dogs")
-      .insert([
-        {
-          user_id: userId,
-          name,
-          breed,
-          sex,
-          weight: Number(weight),
-          age: Number(age),
-          feeding_schedule: feedingSchedule,
-          exercise_schedule: exerciseSchedule,
-          behavior_notes: behaviorNotes,
-          medication_needs: medicationNeeds,
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      alert("Error adding dog: " + error.message);
-    } else {
-      alert("Dog added successfully!");
-      const newDog = data;
-      if (imageFile){
-        const fileExt = imageFile.name.split('.').pop();
-        const filePath = `${userId}/${newDog.id}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("dog-photos")
-          .upload(filePath, imageFile);
-        
-        if (uploadError) {
-          alert("Error uploading image: " + uploadError.message);
-        }
-
-        const {data:publicUrlData} = supabase.storage
-          .from("dog-photos")
-          .getPublicUrl(filePath);
-        
-        const { error: updateError } = await supabase
-          .from("dogs")
-          .update({ photo_url: publicUrlData.publicUrl })
-          .eq("id", newDog.id);
-        
-        if (updateError) {
-          alert("Error saving image URL: " + updateError.message);
-        }
-
+    try {
+      // Build multipart form data (supports optional file upload)
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("breed", breed);
+      formData.append("sex", sex);
+      formData.append("weight", weight); // keep as string; server will coerce
+      formData.append("age", age);
+      formData.append("feeding_schedule", feedingSchedule);
+      formData.append("exercise_schedule", exerciseSchedule);
+      formData.append("behavior_notes", behaviorNotes);
+      formData.append("medication_needs", medicationNeeds);
+      if (imageFile) formData.append("photo", imageFile);
+  
+      const res = await fetch("/api/dogs", {
+        method: "POST",
+        body: formData,
+      });
+  
+      const payload = await res.json();
+  
+      if (!res.ok) {
+        alert("Error adding dog: " + (payload.error ?? "Unknown error"));
+        return;
       }
-
-      if (onDogAdded) onDogAdded(); // refresh dashboard list
-
+  
+      alert("Dog added successfully!");
+  
+      if (onDogAdded) onDogAdded();
+  
       // Clear form
       setName("");
       setBreed("");
@@ -98,9 +65,9 @@ export default function AddDogForm({ onDogAdded }: AddDogFormProps) {
       setBehaviorNotes("");
       setMedicationNeeds("");
       setImageFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (e: any) {
+      alert("Error adding dog: " + (e?.message ?? String(e)));
     }
   }
 
