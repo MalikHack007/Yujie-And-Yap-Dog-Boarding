@@ -49,6 +49,7 @@ function statusBadgeClasses(status: BookingStatus) {
   }
 }
 
+
 export default function BookingsList() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +84,33 @@ export default function BookingsList() {
     }
   }
 
-  useEffect(() => {
+  async function handleCancel(bookingId: string) {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this booking?"
+    );
+    if (!confirmCancel) return;
+
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data?.error ?? "Failed to cancel booking.");
+        return;
+      }
+
+      // Refresh list
+      fetchBookings();
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to cancel booking.");
+    }
+  }
+    useEffect(() => {
     fetchBookings();
   }, []);
 
@@ -142,6 +169,17 @@ export default function BookingsList() {
                   <div className="font-medium">{formatDateTime(b.end_at)}</div>
                 </div>
               </div>
+
+              {b.status === "pending" || b.status === "confirmed" ? (
+                <div className="mt-3">
+                  <button
+                    onClick={() => handleCancel(b.id)}
+                    className="text-sm px-3 py-1.5 rounded border border-red-300 text-red-600 hover:bg-red-50"
+                  >
+                    Cancel Booking
+                  </button>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
