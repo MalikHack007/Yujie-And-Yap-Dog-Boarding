@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { ServiceType } from "@/types/booking";
 
+//Create a new booking from client
 export async function POST(req: Request) {
   const supabase = await createClient();
 
@@ -34,6 +35,8 @@ export async function POST(req: Request) {
   return NextResponse.json({ success: true }, { status: 201 });
 }
 
+
+//read the bookings of a specific user
 export async function GET() {
   const supabase = await createClient();
 

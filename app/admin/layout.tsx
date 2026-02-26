@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 function TabLink({ href, label }: { href: string; label: string }) {
   //get current pathname and check if it matches the href to determine if this tab is active
@@ -30,27 +29,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // On mount, check if the user is an admin. If not, redirect to login or dashboard. Everytime the route changes, check again (in case they log out or something).
   useEffect(() => {
-
-
     async function guard() {
-        const { data: userRes } = await supabase.auth.getUser();
-        if (!userRes?.user) {
-            setAllowed(false);
-            router.replace("/login");
-            return;
-        }
+      const res = await fetch("/api/session", { cache: "no-store" });
+      const data = await res.json();
 
-        const { data, error } = await supabase.rpc("is_admin");
-        const ok = Boolean(data) && !error;
+      if (!res.ok || !data?.user) {
+        setAllowed(false);
+        router.replace("/login");
+        return;
+      }
 
+      if (!data?.isAdmin) {
+        setAllowed(false);
+        router.replace("/dashboard");
+        return;
+      }
 
-        setAllowed(ok);
-        if (!ok) router.replace("/dashboard");
-
+      setAllowed(true);
     }
-
     guard();
-
   }, [router]);
 
   if (allowed === null) {

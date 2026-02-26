@@ -67,7 +67,7 @@ export default function AdminBookingsPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch("/api/bookings", {
+      const res = await fetch("/api/admin/bookings", {
         method: "GET",
         cache: "no-store",
       });
