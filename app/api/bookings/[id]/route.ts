@@ -18,25 +18,59 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { data: isAdmin, error: adminErr } = await supabase.rpc("is_admin");
+
+  if (adminErr) {
+    return NextResponse.json({ error: "Admin check failed." }, { status: 500 });
+  }
+
   const body = await req.json();
   const newStatus = body?.status;
 
-  if (newStatus !== "cancelled") {
+  if (newStatus !== "cancelled" && newStatus !== "confirmed") {
     return NextResponse.json(
-      { error: "Only cancellation is allowed." },
+      { error: "Only 'cancelled' or 'confirmed' is allowed." },
       { status: 400 }
     );
   }
 
+  if (newStatus === "confirmed") {
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { data, error } = await supabase
+      .from("Bookings")
+      .update({ status: "confirmed" })
+      .eq("id", id)
+      .eq("status", "pending") // only allow pending -> confirmed
+      .select("id,status")
+      .maybeSingle();
+
+    if (error || !data) {
+      return NextResponse.json(
+        { error: "Unable to confirm booking." },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true, booking: data });
+  }
+
   // Only allow cancel if booking belongs to user
-  const { data, error } = await supabase
+  let query = supabase
     .from("Bookings")
     .update({ status: "cancelled" })
     .eq("id", id)
-    .eq("owner_id", user.id)
-    .in("status", ["pending", "confirmed"]) // prevent cancelling completed
-    .select("id")
-    .single();
+    .in("status", ["pending", "confirmed"]);
+
+  if (!isAdmin) {
+    query = query.eq("owner_id", user.id);
+  }
+
+  const { data, error } = await query
+    .select("id,status")
+    .maybeSingle();
 
   if (error || !data) {
     return NextResponse.json(
