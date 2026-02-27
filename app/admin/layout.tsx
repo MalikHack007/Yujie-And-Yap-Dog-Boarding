@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ConnectGoogleCalendarButton } from "../components/googleCalendarConnect";
 
 function TabLink({ href, label }: { href: string; label: string }) {
   //get current pathname and check if it matches the href to determine if this tab is active
@@ -65,9 +66,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="border-b bg-white">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
           <div className="font-semibold">Admin Dashboard</div>
-          <Link href="/dashboard" className="text-sm text-gray-600 hover:underline">
-            Back to user dashboard
-          </Link>
+
+          <div className="flex items-center gap-4">
+            <ConnectGoogleCalendarButton />
+            <Link
+              href="/dashboard"
+              className="text-sm text-gray-600 hover:underline"
+            >
+              Back to user dashboard
+            </Link>
+          </div>
         </div>
 
         <div className="mx-auto max-w-6xl px-4 flex gap-2">

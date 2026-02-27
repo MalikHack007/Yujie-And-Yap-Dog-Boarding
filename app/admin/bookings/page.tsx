@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { BookingStatus } from "@/types/booking";
 import type { ServiceType } from "@/types/booking";
 import { formatDateTime, prettyServiceType } from "@/lib/booking/utils";
+import { useSearchParams } from 'next/navigation'
+
 
 type DogRef = { id: string; name: string };
 
@@ -55,6 +57,12 @@ function SidebarItem({
 }
 
 export default function AdminBookingsPage() {
+
+  const searchParams = useSearchParams();
+  const gcal = searchParams.get("gcal");
+  const reason = searchParams.get("reason");
+  const desc = searchParams.get("desc");
+
   const [filter, setFilter] = useState<FilterKey>("all");
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -151,6 +159,20 @@ export default function AdminBookingsPage() {
 
       {/* Main content */}
       <main className="col-span-12 md:col-span-9">
+        {gcal === "connected" && (
+          <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+            Google Calendar connected.
+          </div>
+        )}
+
+        {gcal === "error" && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+            Google Calendar connection failed.
+            {reason ? <div className="mt-1 opacity-80">Reason: {reason}</div> : null}
+            {desc ? <div className="mt-1 opacity-80">{desc}</div> : null}
+          </div>
+        )}
+
         {loading && <div className="text-sm text-gray-600">Loading bookings…</div>}
 
         {errorMsg && (
