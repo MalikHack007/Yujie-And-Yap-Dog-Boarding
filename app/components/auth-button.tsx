@@ -9,41 +9,31 @@ export default function AuthButton() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
-  // Check auth state on mount
   useEffect(() => {
     async function fetchUser() {
       const res = await fetch("/api/me", { method: "GET" });
       const data = await res.json();
-  
-      if (!res.ok) {
-        setUser(null);
-        return;
-      }
-  
+      if (!res.ok) { setUser(null); return; }
       setUser(data.user ?? null);
     }
 
     fetchUser();
-    
+
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
       }
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => { listener.subscription.unsubscribe(); };
   }, []);
 
   async function handleClick() {
     if (user) {
-      // Logged in → logout
       await supabase.auth.signOut();
       setUser(null);
       router.push("/");
     } else {
-      // Not logged in → go to signup
       router.push("/login");
     }
   }
@@ -51,9 +41,34 @@ export default function AuthButton() {
   return (
     <button
       onClick={handleClick}
-      className={`px-4 py-2 rounded-lg transition ${
-        user ? "bg-red-600 hover:bg-red-700 text-white" : "bg-black hover:bg-gray-800 text-white"
-      }`}
+      className={[
+        // Base styles shared by both states
+        "inline-flex items-center",
+        "text-sm font-medium font-[var(--font-ui)]",
+        "tracking-[var(--letter-spacing-wide)]",
+        "px-[var(--spacing-4)] py-[var(--spacing-2)]",
+        "rounded-[var(--radius-button)]",
+        "border",
+        "transition-all duration-[var(--duration-normal)] ease-[var(--ease-spring)]",
+        "hover:-translate-y-px active:translate-y-0",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+        "cursor-pointer",
+
+        // State-specific styles — color tokens only in text-[var()], size via named scale above
+        user
+          ? [
+              "bg-transparent text-[var(--color-signal)]",
+              "border-[var(--color-signal)]",
+              "hover:bg-[var(--color-signal-surface)]",
+              "focus-visible:ring-[var(--color-signal)]",
+            ].join(" ")
+          : [
+              "bg-transparent text-[var(--color-text-secondary)]",
+              "border-[var(--color-border)]",
+              "hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)]",
+              "focus-visible:ring-[var(--color-border-focus)]",
+            ].join(" "),
+      ].join(" ")}
     >
       {user ? "Logout" : "Login"}
     </button>
