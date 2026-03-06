@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Introduction() {
   return (
     <section className="w-full relative overflow-hidden bg-[var(--color-bg)] pt-[var(--spacing-24)] pb-[var(--spacing-32)]">
@@ -57,7 +59,7 @@ export default function Introduction() {
             text-[var(--color-primary)]
             mb-[var(--spacing-4)]
           ">
-            🐾 &nbsp;Who We Are
+            🐾 &nbsp;Who I Am
           </p>
 
           {/* Heading — no font-size arbitrary, use named scale; color is safe alone */}
@@ -69,9 +71,9 @@ export default function Introduction() {
             tracking-[var(--letter-spacing-tight)]
             mb-[var(--spacing-6)]
           ">
-            Dogs are our
+            Every dog deserves
             <br />
-            <span className="text-[var(--color-primary)]">whole world.</span>
+            <span className="text-[var(--color-primary)]">a place that feels like home.</span>
           </h2>
 
           {/* Body copy — text-lg for size, color separate */}
@@ -83,10 +85,13 @@ export default function Introduction() {
             mb-[var(--spacing-6)]
             max-w-[38ch]
           ">
-            We're a small, passionate team of dog lovers who treat every pup
-            like family. From daily walks through the park to cozy overnight
-            stays, we provide care that's rooted in trust, patience, and
-            genuine love for animals.
+              Hi, I’m Yujie, a dog sitter based in Austin who believes every dog deserves attentive, personal care. I host one dog at a time, giving your pup my full attention in a calm, home environment.
+
+              I focus on enriching exercise, play, and mental stimulation while following your dog’s normal routines—from feeding schedules to potty breaks.
+
+              My own dog Brownie is friendly and social, and he loves having a companion to play and relax with during the day.
+
+              Throughout the stay, I’ll keep you updated so you always know how your dog is doing.
           </p>
 
           {/* Secondary body — text-base for size, color separate */}
@@ -97,16 +102,16 @@ export default function Introduction() {
             leading-[var(--line-height-relaxed)]
             max-w-[38ch]
           ">
-            Founded in 2018, we've built a community of happy pet parents and
-            even happier dogs. Every tail wag is a reminder of why we do what
-            we do.
+              I’ve been a dog parent since 2021 and began caring for dogs professionally on Rover in 2024. 
+              Since then, I’ve built trusted relationships with dozens of dog parents who rely on me to care for their pups. 
+              Every wagging tail and happy return visit reminds me why I love doing this.
           </p>
 
           {/* Stats row */}
           <div className="flex gap-[var(--spacing-10)] mt-[var(--spacing-10)]">
             {[
-              { value: "500+", label: "Happy Pups" },
-              { value: "6 yrs", label: "Experience" },
+              { value: "250+", label: "Happy Pups" },
+              { value: "3 yrs", label: "Experience" },
               { value: "100%", label: "5-Star Reviews" },
             ].map(({ value, label }) => (
               <div key={label}>
@@ -140,12 +145,16 @@ export default function Introduction() {
             w-full max-w-[420px]
             aspect-[4/5]
             rounded-[var(--radius-3xl)]
-            bg-[linear-gradient(160deg,var(--color-green-300)_0%,var(--color-green-600)_100%)]
             shadow-[var(--shadow-2xl)]
-            flex items-center justify-center
-            text-[80px]
+            overflow-hidden
+            relative
           ">
-            🐕
+            <Image
+              src="/malikandbrownie.JPEG"
+              alt="Malik with brownie on his shoulder"
+              fill
+              className="object-cover"
+            />
           </div>
 
           {/* Floating rating badge */}

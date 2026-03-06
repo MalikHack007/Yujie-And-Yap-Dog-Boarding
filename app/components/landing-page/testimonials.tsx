@@ -1,9 +1,9 @@
 const testimonials = [
   {
-    name: "Sarah M.",
-    dog: "Bruno, Golden Retriever",
+    name: "Kelly S.",
+    dog: "Luna, Australian Sheperd Dog",
     quote:
-      "I was so nervous leaving Bruno for the first time, but the team made us both feel completely at ease. He came home tired and happy — what more could you ask for?",
+      "Yujie watched our little Luna over the holidays and he did a wonderful job! He sent pictures and updates of her everyday and was extremely responsive and timely. Our pup is a little standoffish around new people but by the end of the trip during the hand off, Luna was going back over to Yujie for pets! It seems they became fast friends. I will definitely have Luna stay with Yujie when we’re out of town in the future.",
     rating: 5,
     avatar: "🐶",
   },
