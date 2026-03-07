@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import BookOnlineButton from "./book-online-button/book-online-button";
 import AuthButton from "./auth-button";
 import { createClient } from "@/lib/supabase/client";
@@ -65,36 +66,26 @@ export default function Navbar() {
         flex items-center justify-between
       ">
 
-        {/* Logo — text-xl for size, text-[var(--color-primary-dark)] for color, no collision */}
+        {/* Logo */}
         <Link
           href="/"
-          className="
-            flex items-center gap-[var(--spacing-2)]
-            font-[var(--font-display)]
-            text-xl font-bold
-            text-[var(--color-primary-dark)]
-            tracking-[var(--letter-spacing-tight)]
-            no-underline
-          "
+          className="flex items-center no-underline shrink-0"
         >
-          {/* Icon span — text-base for size only, color set via text-white */}
-          <span className="
-            inline-flex items-center justify-center
-            w-[var(--spacing-8)] h-[var(--spacing-8)]
-            rounded-[var(--radius-full)]
-            bg-[var(--color-primary)]
-            text-base text-white
-          ">
-            🐾
-          </span>
-          Yujie & Yap
+          <Image
+            src="/Yujie_Yap_logo.png"
+            alt="Yujie & Yap Dog Boarding"
+            width={120}
+            height={48}
+            className="h-12 w-auto object-contain"
+            priority
+          />
         </Link>
 
-        {/* Center Links — text-sm for size on the wrapper, colors on individual children */}
+        {/* Center Links */}
         <div className="hidden md:flex items-center gap-[var(--spacing-8)] font-[var(--font-ui)] text-sm font-medium">
           {[
             { href: "/about", label: "About" },
-            { href: "/services", label: "Services" },
+            { href: "/services", label: "Services/Pricing" },
             { href: "/team", label: "Meet the Team" },
           ].map(({ href, label }) => (
             <Link
@@ -130,7 +121,6 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Admin link — text-xs for size, text-[var(--color-text-muted)] for color, on separate elements */}
           {isAdmin && (
             <Link
               href="/admin/bookings"
