@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const testimonials = [
   {
     name: "Kelly S.",
@@ -5,23 +7,23 @@ const testimonials = [
     quote:
       "Yujie watched our little Luna over the holidays and he did a wonderful job! He sent pictures and updates of her everyday and was extremely responsive and timely. Our pup is a little standoffish around new people but by the end of the trip during the hand off, Luna was going back over to Yujie for pets! It seems they became fast friends. I will definitely have Luna stay with Yujie when we’re out of town in the future.",
     rating: 5,
-    avatar: "🐶",
+    avatar: "/testimonial-profiles/Luna.png",
   },
   {
-    name: "James & Priya K.",
-    dog: "Noodle, Dachshund",
+    name: "Hadley G.",
+    dog: "Archie, Bernedoodle",
     quote:
-      "Noodle has separation anxiety, and honestly so do we. The daily photo updates and check-ins were a lifesaver. We booked again for our next trip before we even got home.",
+      "Yujie was absolutely amazing! He watched our dog for 5 days over Thanksgiving and went above and beyond. He was so flexible when our flight got delayed, and he kept us updated the entire time with frequent messages and the cutest photos of our very needy pup. It gave us total peace of mind knowing our dog was so well cared for. I highly recommend Yujie — we will definitely be booking with him again!",
     rating: 5,
-    avatar: "🌭",
+    avatar: "/testimonial-profiles/Archie.png",
   },
   {
-    name: "Terrence L.",
-    dog: "Zeus, German Shepherd",
+    name: "Sarah F.",
+    dog: "Nero, Pitbull Mix",
     quote:
-      "Zeus is a big boy and needs an experienced hand. These folks handled him beautifully — firm, kind, and clearly knowledgeable. We won't go anywhere else.",
+      "Yujie is fantastic. Not only did they offer an early drop off the night before, they sent daily pictures & check-ins while I was out of state. Very accommodating, professional, and kind. Wouldn’t hesitate to leave Nero in their care again for future endeavors where he can’t join me. Thank you Yujie!",
     rating: 5,
-    avatar: "🐺",
+    avatar: "/testimonial-profiles/Nero.png",
   },
 ];
 
@@ -75,8 +77,7 @@ export default function CustomerTestimonials() {
             leading-[var(--line-height-relaxed)]
             max-w-[44ch] mx-auto
           ">
-            Don't take our word for it — hear it straight from the humans
-            (and pups) who've trusted us.
+            The dogs would leave reviews themselves, but they’re busy napping. Luckily, their humans had plenty to say.
           </p>
         </div>
 
@@ -125,15 +126,13 @@ export default function CustomerTestimonials() {
                 pt-[var(--spacing-4)]
                 border-t border-[var(--color-border)]
               ">
-                <div className="
-                  w-[var(--spacing-10)] h-[var(--spacing-10)]
-                  rounded-[var(--radius-avatar)]
-                  bg-[var(--color-green-100)]
-                  flex items-center justify-center
-                  text-[22px] shrink-0
-                ">
-                  {t.avatar}
-                </div>
+                <Image
+                  src={t.avatar}
+                  alt={`${t.dog} avatar`}
+                  width={40}
+                  height={40}
+                  className="rounded-[var(--radius-avatar)] object-cover shrink-0"
+                />
                 <div>
                   {/* Name — text-sm for size, color separate */}
                   <p className="
