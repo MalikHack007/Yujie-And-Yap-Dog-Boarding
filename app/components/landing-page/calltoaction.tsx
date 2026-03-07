@@ -78,7 +78,7 @@ export default function CallToAction() {
           max-w-[44ch] mx-auto
           mb-[var(--spacing-10)]
         ">
-          Whether it's a weekend away or a long vacation, we'll make sure your
+          Whether it's a weekend away or a long vacation, I'll make sure your
           pup is loved, safe, and having the time of their life. Let's get
           them booked in.
         </p>
@@ -133,7 +133,7 @@ export default function CallToAction() {
           tracking-[var(--letter-spacing-wide)]
           mt-[var(--spacing-8)]
         ">
-          ✓ No commitment required &nbsp;·&nbsp; ✓ Free meet & greet &nbsp;·&nbsp; ✓ Insured & certified
+          ✓ No commitment required &nbsp;·&nbsp; ✓ Free meet & greet &nbsp;
         </p>
 
       </div>

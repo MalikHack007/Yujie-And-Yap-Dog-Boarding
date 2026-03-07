@@ -87,7 +87,7 @@ export default function Navbar() {
           ">
             🐾
           </span>
-          Pawsome
+          Yujie & Yap
         </Link>
 
         {/* Center Links — text-sm for size on the wrapper, colors on individual children */}
