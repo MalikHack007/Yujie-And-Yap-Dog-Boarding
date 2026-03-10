@@ -9,7 +9,7 @@ const services = [
     name: "Dog Boarding",
     tagline: "A home away from home",
     description:
-      "Your dog stays with me overnight in a warm, loving home environment. I keep them on their routine, send you daily updates, and treat them like one of the family.",
+      "Your dog stays with me overnight in my house. I keep them on their routine, send you daily updates, and treat them like one of my own.",
     color: "green",
     tiers: [
       { label: "Per Night",          price: "$55", per: "/ night", note: "First dog" },
@@ -22,7 +22,7 @@ const services = [
       "Cozy indoor sleeping space",
       "Feeding on your schedule",
       "At least 3 potty breaks per day",
-      "Medication administration (topical & oral)",
+      "Medication administration (topical & oral) if needed",
     ],
   },
   {
@@ -30,7 +30,7 @@ const services = [
     name: "Doggie Daycare",
     tagline: "Fun-filled days while you work",
     description:
-      "Drop your pup off for a full or half day of play, socialization, and rest. Perfect for busy work days or when your dog just needs some extra stimulation and company.",
+      "Drop your pup off for a full or half day of play, socialization, and rest.",
     color: "amber",
     tiers: [
       { label: "Full Day", price: "$45", per: "/ dog", note: "Up to 12 hours" },
@@ -50,7 +50,7 @@ const whyMe = [
   {
     icon: "🐾",
     title: "One dog/family at a time",
-    body: "I sit for one dog or one family at a time — always. This means your pup gets my full, undivided attention and never feels overwhelmed by a houseful of strangers.",
+    body: "I sit for one dog or one family at a time. This means your pup gets my full, undivided attention and never feels overwhelmed by a houseful of strangers.",
   },
   {
     icon: "🐕",
@@ -60,7 +60,7 @@ const whyMe = [
   {
     icon: "🤝",
     title: "A built-in best friend",
-    body: "My own dog is peaceful and loves making friends. Your pup will have an extra companion during their stay — built-in social time, no extra charge.",
+    body: "My own dog is peaceful and loves making friends. Your pup will have an extra companion during their stay.",
   },
   {
     icon: "💊",
@@ -80,10 +80,10 @@ const whyMe = [
 ];
 
 const dailySchedule = [
-  { time: "Morning",   icon: "🎾", title: "Fetch or a walk",       body: "We kick off the day with an energetic game of fetch — or a walk if your dog prefers it. A tired dog is a happy dog." },
-  { time: "Throughout", icon: "🌿", title: "Potty & play breaks",   body: "At least 3 potty breaks throughout the day, with extras for puppies or on request. I cater to your dog's specific schedule." },
+  { time: "Morning",   icon: "🎾", title: "Fetch or a walk",       body: "We kick off the day with an energetic game of fetch or a walk if your dog prefers it." },
+  { time: "Throughout", icon: "🌿", title: "Potty & play breaks",   body: "At least 3 potty breaks throughout the day, with extras for puppies or on request. I cater to your dog's specific potty schedule." },
   { time: "Mealtimes",  icon: "🍽️", title: "Your feeding schedule", body: "I follow your dog's exact feeding routine — times, portions, and any dietary needs — so their belly is never confused." },
-  { time: "Evening",    icon: "🌙", title: "Wind down & sleep",     body: "By the end of the day your pup is pleasantly tired, fed, and ready to curl up for the night. Crates are only used if I'm away or sleeping, unless you prefer otherwise." },
+  { time: "Evening",    icon: "🌙", title: "Wind down & sleep",     body: "By the end of the day, your pup will enjoy a long evening walk or play session to burn off the last bit of energy before winding down. After that, they’ll be ready to curl up for the night. Crates are only used if I’m away or sleeping, unless you prefer otherwise." },
 ];
 
 const policies = [
@@ -95,7 +95,7 @@ const policies = [
   {
     icon: "📋",
     title: "What to share before your dog's stay",
-    body: "Please let me know your dog's walking and feeding times, and whether you'll be providing food, bowls, a leash, a crate, toys, or pee pads. If your dog has any prior injuries or medical needs, let me know so I can accommodate them.",
+    body: "Please let me know your dog's walking and feeding times. If your dog has any prior injuries or medical needs, let me know so I can accommodate them.",
   },
   {
     icon: "⚠️",
@@ -105,7 +105,7 @@ const policies = [
   {
     icon: "👁️",
     title: "Supervision first",
-    body: "Crates are only used when I'm away or sleeping at night, unless you specify otherwise. I do this to ensure all of your dog's activities are under my supervision — no safety accidents on my watch.",
+    body: "Crates are only used when I'm away or sleeping at night, unless you specify otherwise. I do this to ensure all of your dog's activities are under my supervision and that no safety accidents occurs.",
   },
 ];
 
@@ -155,37 +155,6 @@ export default function ServicesPage() {
             Services &<br />
             <span className="text-[var(--color-amber-300)]">Pricing</span>
           </h1>
-          <p className="
-            font-[var(--font-body)] text-lg
-            text-[var(--color-green-100)]
-            leading-[var(--line-height-relaxed)]
-            max-w-[52ch]
-          ">
-            Straightforward pricing, no hidden fees — and the same high standard
-            of genuine, attentive care for every single pup.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Unique Selling Point Banner ─────────────────────── */}
-      <section className="
-        bg-[var(--color-primary-surface)]
-        border-b border-[var(--color-primary-light)]
-        py-[var(--spacing-6)]
-      ">
-        <div className="
-          max-w-[var(--width-7xl)] mx-auto px-[var(--spacing-8)]
-          flex flex-wrap items-center justify-center
-          gap-[var(--spacing-2)] text-center
-        ">
-          <span className="text-2xl">🐕</span>
-          <p className="
-            font-[var(--font-display)] text-xl font-bold
-            text-[var(--color-primary-dark)]
-            tracking-[var(--letter-spacing-tight)]
-          ">
-            One dog/family at a time.
-          </p>
         </div>
       </section>
 
@@ -465,7 +434,6 @@ export default function ServicesPage() {
               max-w-[48ch] mx-auto
             ">
               Every day is structured, active, and tailored to your pup's needs.
-              By bedtime, they'll be one happy, tired dog.
             </p>
           </div>
 

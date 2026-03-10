@@ -86,7 +86,6 @@ export default function Navbar() {
           {[
             { href: "/about", label: "About" },
             { href: "/services", label: "Services/Pricing" },
-            { href: "/team", label: "Meet the Team" },
           ].map(({ href, label }) => (
             <Link
               key={href}

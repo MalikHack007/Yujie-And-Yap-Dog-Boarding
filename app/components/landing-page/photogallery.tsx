@@ -76,7 +76,7 @@ export default function PhotoGallery() {
               leading-[var(--line-height-tight)]
               tracking-[var(--letter-spacing-tight)]
             ">
-              A glimpse into our
+              A glimpse into the
               <br />
               <span className="text-[var(--color-primary)]">happy pack</span>
             </h2>

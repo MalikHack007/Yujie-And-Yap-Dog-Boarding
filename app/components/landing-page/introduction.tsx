@@ -85,13 +85,15 @@ export default function Introduction() {
             mb-[var(--spacing-6)]
             max-w-[38ch]
           ">
-              Hi, I’m Yujie, a dog sitter based in Austin who believes every dog deserves attentive, personal care. I host one dog at a time, giving your pup my full attention in a calm, home environment.
+            Hi, I’m Yujie, a dog sitter based in Austin who believes every dog deserves attentive, personal care.
 
-              I focus on enriching exercise, play, and mental stimulation while following your dog’s normal routines—from feeding schedules to potty breaks.
+            My primary service is in-home dog boarding, where your dog stays with me in my home while you’re away. This allows me to provide 24/7 care in a calm, home-like environment, so your dog feels comfortable, safe, and part of the family rather than in a kennel.
 
-              My own dog Brownie is friendly and social, and he loves having a companion to play and relax with during the day.
+            During their stay, I focus on enriching exercise, play, and mental stimulation while following your dog’s normal routines, from feeding schedules to potty breaks.
 
-              Throughout the stay, I’ll keep you updated so you always know how your dog is doing.
+            My own dog Brownie is friendly and social, and she loves having a companion to play and relax with during the day.
+
+            Throughout the stay, I’ll keep you updated with photos so you always know how your dog is doing.
           </p>
 
           {/* Secondary body — text-base for size, color separate */}
