@@ -21,7 +21,7 @@ function formatMoney(cents: number, currency: string) {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
-  }).format(cents / 100);
+  }).format(cents);
 }
 
 export default function BookingModification({ booking, onSaved, onCancel }: Props) {
