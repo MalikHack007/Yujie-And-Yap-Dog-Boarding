@@ -18,8 +18,17 @@ export async function POST(req: Request) {
 
   if (!service_type || !Array.isArray(dog_ids) || dog_ids.length === 0 || !(end_at > start_at)) {
     return NextResponse.json({ error: "Invalid inputs" }, { status: 400 });
-  }
+  } //data validation
 
+  /*TODO: With the new booking_dogs table containing two columns booking_id and dog_id, 
+    both of which are foreign keys to the bookings table and dog table.
+    the bookings table no longer expects a dog_id. That column has been dropped
+    Instead, we want to:
+    1) insert the booking into Bookings
+    2) get the new booking id
+    3) insert one row per selected dog into booking_dogs
+  */
+  
   const rows = dog_ids.map((dogId) => ({
     dog_id: dogId,
     owner_id: userRes.user.id,
@@ -35,6 +44,11 @@ export async function POST(req: Request) {
   return NextResponse.json({ success: true }, { status: 201 });
 }
 
+  /*TODO: To read a booking from a specific user, 
+    we need to now 
+    1) retrieve the relevant booking info from the bookings table
+    2) retrieve the dogs that a bookings has from the booking_dogs table
+  */
 
 //read the bookings of a specific user
 export async function GET() {
