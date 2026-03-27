@@ -1,19 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { BookingStatus, ServiceType } from "@/types/booking";
+import type { BookingRow, BookingStatus } from "@/types/booking";
 import { formatDateTime, prettyServiceType } from "@/lib/booking/utils";
-
-type DogRef = { id: string; name: string };
-
-type BookingRow = {
-  id: string;
-  service_type: ServiceType;
-  start_at: string;
-  end_at: string;
-  status: BookingStatus;
-  dogs: DogRef[];
-};
+import BookingModification from "@/app/components/booking/BookingModification";
 
 function statusBadgeClasses(status: BookingStatus) {
   switch (status) {
@@ -33,11 +23,11 @@ function statusBadgeClasses(status: BookingStatus) {
   }
 }
 
-
 export default function BookingsList() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
 
   async function fetchBookings() {
     setLoading(true);
@@ -88,13 +78,14 @@ export default function BookingsList() {
         return;
       }
 
-      // Refresh list
+      setEditingBookingId((prev) => (prev === bookingId ? null : prev));
       fetchBookings();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to cancel booking.");
     }
   }
-    useEffect(() => {
+
+  useEffect(() => {
     fetchBookings();
   }, []);
 
@@ -121,56 +112,81 @@ export default function BookingsList() {
         <p>You don’t have any bookings yet.</p>
       ) : (
         <div className="grid gap-4">
-          {bookings.map((b) => (
-            <div
-              key={b.id}
-              className="border rounded-xl p-4 shadow-sm bg-white flex flex-col gap-2"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="font-semibold text-lg">{prettyServiceType(b.service_type)}</div>
-                  <div className="text-sm text-gray-600">
-                    Dogs:{" "}
-                    <span className="font-medium text-gray-800">
-                      {b.dogs.length > 0
-                        ? b.dogs.map((dog) => dog.name).join(", ")
-                        : "Unknown"}
-                    </span>
+          {bookings.map((b) => {
+            const canModify = b.status !== "completed" && b.status !== "cancelled";
+            const isEditing = editingBookingId === b.id;
+
+            return (
+              <div
+                key={b.id}
+                className="border rounded-xl p-4 shadow-sm bg-white flex flex-col gap-2"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="font-semibold text-lg">{prettyServiceType(b.service_type)}</div>
+                    <div className="text-sm text-gray-600">
+                      Dogs:{" "}
+                      <span className="font-medium text-gray-800">
+                        {b.dogs.length > 0
+                          ? b.dogs.map((dog) => dog.name).join(", ")
+                          : "Unknown"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full font-semibold ${statusBadgeClasses(
+                      b.status
+                    )}`}
+                  >
+                    {prettyServiceType(b.status)}
+                  </span>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div className="text-gray-500">Start</div>
+                    <div className="font-medium">{formatDateTime(b.start_at)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">End</div>
+                    <div className="font-medium">{formatDateTime(b.end_at)}</div>
                   </div>
                 </div>
 
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-semibold ${statusBadgeClasses(
-                    b.status
-                  )}`}
-                >
-                  {prettyServiceType(b.status)}
-                </span>
-              </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {canModify ? (
+                    <button
+                      onClick={() => setEditingBookingId((prev) => (prev === b.id ? null : b.id))}
+                      className="text-sm px-3 py-1.5 rounded border border-blue-300 text-blue-700 hover:bg-blue-50"
+                    >
+                      {isEditing ? "Close Modify Booking" : "Modify Booking"}
+                    </button>
+                  ) : null}
 
-              <div className="grid sm:grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="text-gray-500">Start</div>
-                  <div className="font-medium">{formatDateTime(b.start_at)}</div>
+                  {b.status === "pending" || b.status === "confirmed" ? (
+                    <button
+                      onClick={() => handleCancel(b.id)}
+                      className="text-sm px-3 py-1.5 rounded border border-red-300 text-red-600 hover:bg-red-50"
+                    >
+                      Cancel Booking
+                    </button>
+                  ) : null}
                 </div>
-                <div>
-                  <div className="text-gray-500">End</div>
-                  <div className="font-medium">{formatDateTime(b.end_at)}</div>
-                </div>
-              </div>
 
-              {b.status === "pending" || b.status === "confirmed" ? (
-                <div className="mt-3">
-                  <button
-                    onClick={() => handleCancel(b.id)}
-                    className="text-sm px-3 py-1.5 rounded border border-red-300 text-red-600 hover:bg-red-50"
-                  >
-                    Cancel Booking
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ))}
+                {isEditing ? (
+                  <BookingModification
+                    booking={b}
+                    onSaved={() => {
+                      setEditingBookingId(null);
+                      fetchBookings();
+                    }}
+                    onCancel={() => setEditingBookingId(null)}
+                  />
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
