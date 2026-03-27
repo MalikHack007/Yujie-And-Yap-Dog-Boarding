@@ -14,8 +14,7 @@ type BookingRow = {
   start_at: string;
   end_at: string;
   status: BookingStatus;
-  /* It will be an array of dog objects */
-  dogs: DogRef | null;
+  dogs: DogRef[];
 };
 
 function statusBadgeClasses(status: BookingStatus) {
@@ -63,9 +62,9 @@ export default function BookingsList() {
       // supports either: array response OR { bookings: array }
       const rows: BookingRow[] = Array.isArray(data) ? data : data?.bookings ?? [];
       setBookings(rows);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setBookings([]);
-      setErrorMsg(err?.message ?? "Unable to load bookings.");
+      setErrorMsg(err instanceof Error ? err.message : "Unable to load bookings.");
     } finally {
       setLoading(false);
     }
@@ -93,8 +92,8 @@ export default function BookingsList() {
 
       // Refresh list
       fetchBookings();
-    } catch (err: any) {
-      alert(err?.message ?? "Failed to cancel booking.");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to cancel booking.");
     }
   }
     useEffect(() => {
@@ -133,8 +132,12 @@ export default function BookingsList() {
                 <div>
                   <div className="font-semibold text-lg">{prettyServiceType(b.service_type)}</div>
                   <div className="text-sm text-gray-600">
-                    /* TODO: This should iterate over an array of dog objects */
-                    Dog: <span className="font-medium text-gray-800">{b.dogs?.name ?? "Unknown"}</span>
+                    Dogs:{" "}
+                    <span className="font-medium text-gray-800">
+                      {b.dogs.length > 0
+                        ? b.dogs.map((dog) => dog.name).join(", ")
+                        : "Unknown"}
+                    </span>
                   </div>
                 </div>
 

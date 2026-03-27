@@ -20,35 +20,41 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid inputs" }, { status: 400 });
   } //data validation
 
-  /*TODO: With the new booking_dogs table containing two columns booking_id and dog_id, 
-    both of which are foreign keys to the bookings table and dog table.
-    the bookings table no longer expects a dog_id. That column has been dropped
-    Instead, we want to:
-    1) insert the booking into Bookings
-    2) get the new booking id
-    3) insert one row per selected dog into booking_dogs
-  */
-  
-  const rows = dog_ids.map((dogId) => ({
-    dog_id: dogId,
+  const bookingRow = {
     owner_id: userRes.user.id,
     service_type,
     start_at: start_at.toISOString(),
     end_at: end_at.toISOString(),
     status: "pending",
+  };
+
+  const { data: booking, error: bookingError } = await supabase
+    .from("Bookings")
+    .insert(bookingRow)
+    .select("id")
+    .single();
+  if (bookingError || !booking) {
+    return NextResponse.json(
+      { error: bookingError?.message ?? "Unable to create booking." },
+      { status: 400 }
+    );
+  }
+
+  const bookingDogRows = dog_ids.map((dogId) => ({
+    booking_id: booking.id,
+    dog_id: dogId,
   }));
 
-  const { error } = await supabase.from("Bookings").insert(rows);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  const { error: bookingDogsError } = await supabase
+    .from("booking_dogs")
+    .insert(bookingDogRows);
+  if (bookingDogsError) {
+    return NextResponse.json({ error: bookingDogsError.message }, { status: 400 });
+  }
 
   return NextResponse.json({ success: true }, { status: 201 });
 }
 
-  /*TODO: To read a booking from a specific user, 
-    we need to now 
-    1) retrieve the relevant booking info from the bookings table
-    2) retrieve the dogs that a bookings has from the booking_dogs table
-  */
 
 //read the bookings of a specific user
 export async function GET() {
@@ -77,10 +83,11 @@ export async function GET() {
       start_at,
       end_at,
       status,
-      /* Todo: No more dog_id column inside the bookings table. */
-      dogs:dog_id (
-        id,
-        name
+      booking_dogs (
+        dogs (
+          id,
+          name
+        )
       )
     `)
     .eq("owner_id", user.id)
@@ -93,7 +100,7 @@ export async function GET() {
     );
   }
 
-  // 3️⃣ Normalize response shape (important)
+  // Normalize response shape (important)
   const bookings =
     (data ?? []).map((b) => ({
       id: b.id,
@@ -101,8 +108,9 @@ export async function GET() {
       start_at: b.start_at,
       end_at: b.end_at,
       status: b.status,
-      /* TODO: At the end this dogs field will contain an array of dog objects. [{id:{id}, name:{name}}, ....] */
-      dogs: b.dogs ?? null,
+      dogs: (b.booking_dogs ?? [] as { dogs: { id: string; name: string } | null }[])
+        .map((bd) => bd.dogs)
+        .filter(Boolean),
     }));
 
   return NextResponse.json({ bookings });
