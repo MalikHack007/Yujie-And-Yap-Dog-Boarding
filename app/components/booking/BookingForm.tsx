@@ -11,17 +11,13 @@ type DogOption = {
 //TODO: Get rid of drop-in and dog walk service types
 const SERVICE_LABELS: Record<ServiceType, string> = {
   boarding: "Boarding",
-  daycare: "Daycare",
-  drop_in: "Drop-in",
-  walk: "Dog Walk",
+  daycare: "Daycare"
 };
 
 //TODO: Get rid of drop-in and dog walk service types
 const SERVICE_ICONS: Record<ServiceType, string> = {
   boarding: "🏡",
-  daycare: "☀️",
-  drop_in: "🚪",
-  walk: "🦮",
+  daycare: "☀️"
 };
 
 

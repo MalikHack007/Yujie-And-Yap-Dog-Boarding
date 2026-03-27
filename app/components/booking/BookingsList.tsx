@@ -6,8 +6,6 @@ import { formatDateTime, prettyServiceType } from "@/lib/booking/utils";
 
 type DogRef = { id: string; name: string };
 
-/* TODO: Each BookingRow now expects an ARRAY of dog objects. */
-
 type BookingRow = {
   id: string;
   service_type: ServiceType;
