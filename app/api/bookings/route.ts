@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 export async function GET() {
   const supabase = await createClient();
 
-  // 1️⃣ Auth check
+  // Auth check
   const {
     data: { user },
     error: authError,
@@ -67,7 +67,7 @@ export async function GET() {
     );
   }
 
-  // 2️⃣ Fetch bookings for this user
+  // Fetch bookings for this user
   // Only return the columns the UI needs
   const { data, error } = await supabase
     .from("Bookings")
@@ -77,6 +77,7 @@ export async function GET() {
       start_at,
       end_at,
       status,
+      /* Todo: No more dog_id column inside the bookings table. */
       dogs:dog_id (
         id,
         name
@@ -100,6 +101,7 @@ export async function GET() {
       start_at: b.start_at,
       end_at: b.end_at,
       status: b.status,
+      /* TODO: At the end this dogs field will contain an array of dog objects. [{id:{id}, name:{name}}, ....] */
       dogs: b.dogs ?? null,
     }));
 
