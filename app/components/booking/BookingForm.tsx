@@ -8,6 +8,7 @@ type DogOption = {
   name: string;
 };
 
+//TODO: Get rid of drop-in and dog walk service types
 const SERVICE_LABELS: Record<ServiceType, string> = {
   boarding: "Boarding",
   daycare: "Daycare",
@@ -15,12 +16,14 @@ const SERVICE_LABELS: Record<ServiceType, string> = {
   walk: "Dog Walk",
 };
 
+//TODO: Get rid of drop-in and dog walk service types
 const SERVICE_ICONS: Record<ServiceType, string> = {
   boarding: "🏡",
   daycare: "☀️",
   drop_in: "🚪",
   walk: "🦮",
 };
+
 
 type Quote = {
   canCompute: boolean;

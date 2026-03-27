@@ -8,7 +8,7 @@ export const BOOKING_STATUSES = [
   ] as const;
 
 export type BookingStatus = (typeof BOOKING_STATUSES)[number];
-
+//TODO: Get rid of drop-in and walk service types
 export const SERVICE_TYPES = [
     "boarding",
     "daycare",
