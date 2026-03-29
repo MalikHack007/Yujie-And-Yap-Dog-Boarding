@@ -18,6 +18,22 @@ export type DogRef = {
   name: string;
 };
 
+export type Dog = {
+  id: string;
+  name: string;
+  breed: string;
+  sex: string;
+  weight: number;
+  age: number;
+  photo_url: string;
+  feeding_schedule: string;
+  exercise_schedule: string;
+  behavior_notes: string;
+  medication_needs: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 export type BookingRow = {
   id: string;
   service_type: ServiceType;

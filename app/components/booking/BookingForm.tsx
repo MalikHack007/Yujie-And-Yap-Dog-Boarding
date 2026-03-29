@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { ServiceType } from "@/types/booking";
+import type { ServiceType, Dog } from "@/types/booking";
 
-type DogOption = {
-  id: string;
-  name: string;
-};
 
-//TODO: Get rid of drop-in and dog walk service types
 const SERVICE_LABELS: Record<ServiceType, string> = {
   boarding: "Boarding",
   daycare: "Daycare"
 };
 
-//TODO: Get rid of drop-in and dog walk service types
 const SERVICE_ICONS: Record<ServiceType, string> = {
   boarding: "🏡",
   daycare: "☀️"
@@ -33,7 +27,7 @@ type Quote = {
 };
 
 export default function BookingForm() {
-  const [dogs, setDogs] = useState<DogOption[]>([]);
+  const [dogs, setDogs] = useState<Dog[]>([]);
   const [dogsLoading, setDogsLoading] = useState(true);
 
   const [serviceType, setServiceType] = useState<ServiceType>("boarding");
@@ -70,9 +64,10 @@ export default function BookingForm() {
           setMessage(data?.error ?? "Please log in to request a booking.");
           return;
         }
-        const options: DogOption[] = (data ?? []).map((dog: any) => ({
+        const options: Dog[] = (data ?? []).map((dog: any) => ({
           id: dog.id,
           name: dog.name,
+          deleted_at: dog.deleted_at
         }));
         setDogs(options);
         setDogsLoading(false);
@@ -305,7 +300,11 @@ export default function BookingForm() {
               overflow-hidden
             ">
               {dogs.map((dog) => {
+                /* TODO: If the dog has been deleted, do not render */
+                if (dog.deleted_at) return null;
+                
                 const checked = selectedDogIds.includes(dog.id);
+
                 return (
                   <label
                     key={dog.id}
